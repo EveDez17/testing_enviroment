@@ -2,7 +2,10 @@
 import factory
 from factory.django import DjangoModelFactory
 from django.contrib.auth import get_user_model
-from warehouse.inventory.models import Employee
+from warehouse.app_auth_user.models import Employee
+from warehouse.inventory.models import Address
+
+
 
 class UserFactory(DjangoModelFactory):
     class Meta:
@@ -22,18 +25,7 @@ class UserFactory(DjangoModelFactory):
         if extracted:
             for role in extracted:
                 self.groups.add(role)
+                
 
 
-class EmployeeFactory(DjangoModelFactory):
-    class Meta:
-        model = Employee  # Ensure Employee is imported correctly
-
-    user = factory.SubFactory(UserFactory)
-    first_name = factory.Faker('first_name')
-    last_name = factory.Faker('last_name')
-    personal_email = factory.LazyAttribute(lambda obj: f"{obj.user.email}")
-    contact_number = factory.Faker('phone_number')
-    address = factory.Faker('address')
-    position = "Warehouse Operative"
-    start_date = factory.Faker('past_date')
 

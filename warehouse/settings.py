@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'simple_history',
     'mptt',
+    'warehouse.app_auth_user',
     'warehouse.dashboard',
     'warehouse.inventory',
     'warehouse.demo',
@@ -78,13 +79,26 @@ TEMPLATES = [
 WSGI_APPLICATION = 'warehouse.wsgi.application'
 
 
-# Database
+# Database dfault
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
+#DATABASES = {
+#    'default': {
+#        'ENGINE': 'django.db.backends.sqlite3',
+#        'NAME': BASE_DIR / 'db.sqlite3',
+#    }
+#}
+
+#Postgres 
+
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": "sis_db",
+        "USER": "postgres",
+        "PASSWORD": "superuser",
+        "HOST": "localhost",
+        "PORT": "5432",
     }
 }
 
@@ -131,7 +145,7 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 #Custom User
-AUTH_USER_MODEL = 'inventory.User'
+AUTH_USER_MODEL = 'app_auth_user.User'
 
 # settings.py
 

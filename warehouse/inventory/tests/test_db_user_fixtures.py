@@ -6,7 +6,7 @@ from django.urls import reverse
 from django.contrib.auth.models import Group
 from django.contrib.auth import get_user_model
 from warehouse.tests.factories import UserFactory, EmployeeFactory
-from warehouse.inventory.models import User
+from warehouse.app_auth_user.models import User
 
 #Test case for actual user created
 @pytest.mark.django_db
