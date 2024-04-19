@@ -31,16 +31,16 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'warehouse.app_auth_user.apps.AppAuthUserConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',
     'simple_history',
     'mptt',
-    'warehouse.app_auth_user',
-    'warehouse.dashboard',
     'warehouse.inventory',
     'warehouse.demo',
     
@@ -94,7 +94,7 @@ WSGI_APPLICATION = 'warehouse.wsgi.application'
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": "sis_db",
+        "NAME": "sis_inv_db",
         "USER": "postgres",
         "PASSWORD": "superuser",
         "HOST": "localhost",
@@ -137,7 +137,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
@@ -152,3 +152,18 @@ AUTH_USER_MODEL = 'app_auth_user.User'
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # Outputs to console
 
 
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        '': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+        },
+    },
+}

@@ -1,67 +1,38 @@
 #USER SETUP TO LOGIN
 
-from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.utils.translation import gettext_lazy as _
-from django.conf import settings
-from warehouse.app_auth_user.managers  import UserManager
+import uuid
+from django.db import models
+from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
+from warehouse.app_auth_user.managers import UserManager
 from warehouse.app_auth_user.utils import send_admin_approval_request
-from warehouse.inventory.models import Address
+from django.db import models
+from django.utils.translation import gettext_lazy as _
 
-class User(AbstractUser):
-    username = None  # We're using email instead of username
-    email = models.EmailField(_('email address'), unique=True)
-    is_approved = models.BooleanField(default=False, verbose_name=_('Is Approved'))  # Field to track approval status
-    
-    class Role(models.TextChoices):
-        DEFAULT_USER = "DEFAULT_USER", _('Default User')
-        SECURITY = "SECURITY", _('Security')
-        RECEPTIONIST = "RECEPTIONIST", _('Receptionist')
-        WAREHOUSE_OPERATIVE = "WAREHOUSE_OPERATIVE", _('Warehouse Operative')
-        WAREHOUSE_ADMIN = "WAREHOUSE_ADMIN", _('Warehouse Admin')
-        WAREHOUSE_TEAM_LEADER = "WAREHOUSE_TEAM_LEADER", _('Warehouse Team Leader')
-        WAREHOUSE_MANAGER = "WAREHOUSE_MANAGER", _('Warehouse Manager')
-        INVENTORY_ADMIN = "INVENTORY_ADMIN", _('Inventory Admin')
-        INVENTORY_TEAM_LEADER = "INVENTORY_TEAM_LEADER", _('Inventory Team Leader')
-        INVENTORY_MANAGER = "INVENTORY_MANAGER", _('Inventory Manager')
-        OPERATIONAL_MANAGER = "OPERATIONAL_MANAGER", _('Operational Manager')
 
-    role = models.CharField(max_length=50, choices=Role.choices, default=Role.DEFAULT_USER, verbose_name=_('Role'))
-
-    USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = []
-
-    objects = UserManager()
+#Role Model
+class Role(models.Model):
+    name = models.CharField(max_length=50, unique=True, verbose_name=_('Role Name'))
+    permissions = models.ManyToManyField('auth.Permission', blank=True, verbose_name=_('Permissions'))
 
     class Meta:
-        verbose_name = _('User')
-        verbose_name_plural = _('Users')
+        verbose_name = _('Role')
+        verbose_name_plural = _('Roles')
 
     def __str__(self):
-        return self.email
+        return self.name
 
-    def has_role(self, role):
-        return self.role == role
-
-    def save(self, *args, **kwargs):
-        creating = not self.pk
-        super().save(*args, **kwargs)
-        if creating and not self.is_approved and self.role in [
-            self.Role.WAREHOUSE_ADMIN, self.Role.OPERATIONAL_MANAGER]:
-            self.is_active = False
-            send_admin_approval_request(self)  # Call to send an admin approval request
-        super().save(*args, **kwargs)
-
+# Employee Model
 class Employee(models.Model):
-    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, primary_key=True)
     first_name = models.CharField(max_length=255, verbose_name=_('First Name'))
     last_name = models.CharField(max_length=255, verbose_name=_('Last Name'))
     dob = models.DateField(verbose_name=_('Date of Birth'))
     personal_email = models.EmailField(unique=True, verbose_name=_('Personal Email'))
-    contact_number = models.CharField(max_length=20, verbose_name=_('Contact Number'))
-    address = models.OneToOneField(Address, on_delete=models.CASCADE, verbose_name=_('Address'))  
-    position = models.CharField(max_length=100, verbose_name=_('Position'))
+    contact_number = models.CharField(max_length=35, verbose_name=_('Contact Number'))
+    address = models.OneToOneField('inventory.Address', on_delete=models.CASCADE, verbose_name=_('Address'))
     start_date = models.DateField(verbose_name=_('Start Date'))
+    role = models.ForeignKey(Role, on_delete=models.SET_NULL, null=True, blank=True, verbose_name=_('Role'))
 
     class Meta:
         db_table = 'employee'
@@ -71,4 +42,32 @@ class Employee(models.Model):
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
 
-        
+    @property
+    def employee_number(self):
+        initials = self.first_name[:2].upper() + self.last_name[:2].upper()
+        unique_id = uuid.uuid4().hex[:6]
+        return f"{initials}-{unique_id}"
+
+
+class User(AbstractBaseUser, PermissionsMixin):
+    email = models.EmailField(_('email address'), unique=True)
+    is_staff = models.BooleanField(_('staff status'), default=False,
+        help_text=_('Designates whether the user can log into this admin site.'))
+    is_active = models.BooleanField(_('active'), default=True,
+        help_text=_('Designates whether this user should be treated as active. '
+                    'Unselect this instead of deleting accounts.'))
+    date_joined = models.DateTimeField(_('date joined'), auto_now_add=True)
+
+    objects = UserManager()
+
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = []  # email and password are required by default
+
+    class Meta:
+        verbose_name = _('user')
+        verbose_name_plural = _('users')
+
+    def __str__(self):
+        return self.email
+
+
